@@ -1,0 +1,15 @@
+# Ignore environment secrets
+.env
+
+# Docker volumes
+inventree_db_data/
+inventree_redis_data/
+inventree_media/
+inventree_static/
+
+# Temporary files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
