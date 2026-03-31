@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+  inventree-db:
+    image: postgres:16-alpine
+    container_name: inventree-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: inventree
+      POSTGRES_PASSWORD: change_this_password_123456
+      POSTGRES_DB: inventree
+    volumes:
+      - inventree_db_data:/var/lib/postgresql/data
+
+  inventree-redis:
+    image: redis:7-alpine
+    container_name: inventree-redis
+    restart: unless-stopped
+    volumes:
+      - inventree_redis_data:/data
+
+  inventree-server:
+    image: inventree/inventree:stable
+    container_name: inventree-server
+    restart: unless-stopped
+    depends_on:
+      - inventree-db
+      - inventree-redis
+    environment:
+      - INVENTREE_DB_ENGINE=django.db.backends.postgresql
+      - INVENTREE_DB_NAME=inventree
+      - INVENTREE_DB_USER=inventree
+      - INVENTREE_DB_PASSWORD=change_this_password_123456
+      - INVENTREE_DB_HOST=inventree-db
+      - INVENTREE_DEBUG=False
+      - INVENTREE_SECRET_KEY=make_this_a_very_long_random_string_1234567890abcdef_ChangeItNow
+      - INVENTREE_ALLOWED_HOSTS=*
+      - INVENTREE_PLUGINS_ENABLED=True
+    volumes:
+      - inventree_media:/var/www/media
+      - inventree_static:/var/www/static
+    ports:
+      - "8000:8000"
+
+  inventree-worker:
+    image: inventree/inventree:stable
+    container_name: inventree-worker
+    restart: unless-stopped
+    depends_on:
+      - inventree-server
+    environment:
+      - INVENTREE_DB_ENGINE=django.db.backends.postgresql
+      - INVENTREE_DB_NAME=inventree
+      - INVENTREE_DB_USER=inventree
+      - INVENTREE_DB_PASSWORD=change_this_password_123456
+      - INVENTREE_DB_HOST=inventree-db
+    volumes:
+      - inventree_media:/var/www/media
+      - inventree_static:/var/www/static
+    command: invoke worker
+
+volumes:
+  inventree_db_data:
+  inventree_redis_data:
+  inventree_media:
+  inventree_static:
